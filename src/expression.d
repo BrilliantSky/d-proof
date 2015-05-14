@@ -1,11 +1,15 @@
 
 import std.string;
 
+
+/// Logic Expression containing either a single variable
+/// or a predicate and one or more subexpressions.
 class Expression
 {
+	/// Predicate or variable
 	string mFunc;
+	/// Subexpressions
 	const(Expression)[] mArgs;
-	string mSupport;
 
 	this(string func) pure
 	{
@@ -16,6 +20,7 @@ class Expression
 		mFunc = func;
 		mArgs = args;
 	}
+	/// Add a subexpression as an argument to the predicate
 	void add(Expression sub) pure
 	{
 		mArgs ~= sub;
@@ -31,6 +36,9 @@ class Expression
 		return '('~argstr.join(" ")~')';
 	}
 
+	/// Full comparison between expressions.
+	///
+	/// Compares subexpressions for equality.
 	bool compare(const(Expression) other) const pure
 	{
 		//writefln("Compare %s with %s", this, other);
@@ -58,6 +66,8 @@ class Expression
 		}
 		return true;
 	}
+	/+
+	/// Substitution for forAll Elim
 	const(Expression) substitute(const(Expression) other, const(Expression) name) const pure
 	{
 		// 1. (forall x_ (MP (func1 x_) (func2 x_)) )
@@ -107,7 +117,8 @@ class Expression
 		//if( changed )
 		//	writefln("subst(%s) %s --> %s CHANGED: %s", this, from, to, new Expression(mFunc, replacements));
 		return !changed ? this : new Expression(mFunc, replacements);
-	}
+	}+/
+	/// Return all symbols in all subexpressions (some may be listed more than once)
 	const(Expression)[] getSymbols() const pure
 	{
 		if( mArgs.length == 0 )
@@ -118,10 +129,11 @@ class Expression
 		return symbols;
 	}
 
+	/// Predicate or variable
 	@property string func() const pure { return mFunc; }
+	/// Subexpressions used as arguments to the predicate
 	@property const(Expression)[] args() const pure { return mArgs; }
+	/// How many arguments to the predicate
 	@property auto nargs() const pure { return mArgs.length; }
-	@property string support() const pure { return mSupport; }
-	@property string support(string support) pure { return mSupport = support; }
 }
 

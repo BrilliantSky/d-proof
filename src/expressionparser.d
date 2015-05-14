@@ -8,11 +8,20 @@ import expression;
 import proof;
 import proofcontext;
 
+/// Parser interface to allow different parsers
+/// to be plugged in dynamically.
 interface Parser
 {
 	Expression parse(in char[] src) const;
 }
 
+/// Parses lines containing expressions in prefix form.
+///
+/// Examples:
+/// ---
+/// (not a)
+/// (and a (not b) (or c d))
+/// ---
 class PrefixParser : Parser
 {
 private:
@@ -57,6 +66,9 @@ private:
 		return true;
 	}
 public:
+	/// Recursively parse an expression contained in src
+	///
+	/// Handles nested expressions recursively.
 	static Expression parseExpression(in char[] src)
 	{
 		enum string VAR = `\p{Greek}|\w+`;
@@ -92,6 +104,8 @@ public:
 
 		return exp;
 	}
+	/// Virtual method for parsing expressions to allow the use
+	/// of a parser interface.
 	override Expression parse(in char[] src) const { return parseExpression(src); }
 }
 

@@ -45,6 +45,8 @@ public:
 	}
 }+/
 
+
+/// Class providing a command-line interface to d-proof
 class Application
 {
 private:
@@ -61,6 +63,7 @@ public:
 		mVerbosity = verbosity;
 	}
 private:
+	/// Logs a message if the specified level meets or exceeds the logging threshold.
 	void log(Args...)(LogLevel level, Args args)
 	{
 		if( level <= mVerbosity )
@@ -69,6 +72,7 @@ private:
 		}
 	}
 
+	/// Prints all of the statements in a ProofContext.
 	void dump(ProofContext context)
 	{
 		if( mVerbosity == LogLevel.Quiet )
@@ -79,8 +83,10 @@ private:
 		}
 	}
 
-	// TODO: This should throw exceptions, not return Error.
 	enum LineType { Empty=0, Command, Statement, Goal, Error }
+	/// Parses a single line for either an expression, goal, or command.
+	/// Returns the type of line.
+	// TODO: This should throw exceptions, not return Error.
 	LineType parseLine(in char[] line, uint l, ref Expression[] premises, ref Expression goal)
 	{
 		if( line.length==0 || line[0] == '#' )
@@ -135,12 +141,12 @@ private:
 			else
 			{
 				log(LOG_VERBOSE, "Premise on line %s: %s", l, exp);
-				exp.support = "premise";
 				premises ~= exp;
 			}
 			return exp ? LineType.Statement : LineType.Error;
 		}
 	}
+	/// Parses the expressions (premises and goal) in a file
 	bool parseFile(in char[] filename, ref Expression[] exp, out Expression goal)
 	{
 		auto src = File(filename.idup, "r");
@@ -156,6 +162,7 @@ private:
 		return true;
 	}
 public:
+	/// Allows interactive specification of premises, goals, and commands.
 	int proveInteractive()
 	{
 		Expression[] premises;
@@ -221,6 +228,7 @@ public:
 			writeln("");
 		return 0;
 	}
+	/// Proves or disproves the goal in the file based on premises in the file
 	int proveFile(string filename)
 	{
 		Expression[] premises;
@@ -229,6 +237,9 @@ public:
 		parseFile(filename, premises, goal);
 		return prove(premises, goal);
 	}
+	/// Call the proof generator with the given premises and goal.
+	///
+	/// Prints the result and returns true if successful.
 	bool prove(Expression[] premises, Expression goal)
 	{
 		auto context = new ProofContext(premises, goal);
@@ -262,8 +273,8 @@ int main(string[] args)
 	if( help )
 	{
 		writeln(
-			"Welcome to D-prover, an automated theorem prover written in D.\n"
-			"Usage: <prove> [Options]\n"
+			"Welcome to d-proof, an automated proof generator written in D.\n"
+			"Usage: <d-proof> [Options]\n"
 			"Available options:\n"
 			"    --help, -h     Display this help text.\n"
 			"    --input, -i    Input file to read. Leave blank or use - for stdin.\n"
@@ -278,96 +289,5 @@ int main(string[] args)
 		return app.proveInteractive();
 	else
 		return app.proveFile(filename);
-
-/+
-	bool[const(Expression)] andElims;
-	bool[const(Expression)] notElims;
-	bool[const(Expression)] implied;
-//	uint                    foralls=0;
-	bool[const(Expression)] symbols;
-
-	auto rules
-
-	const(Expression)[] statements = premises;
-	bool action;
-	do
-	{
-		action = false;
-		writefln("Statements: %s", statements);
-		const(Expression)[] newStatements;
-		foreach(i, statement; statements )
-		{
-			if( statement.compare(goal) )
-				goto success;
-			if( statement.func == "MP" && statement.args.length > 1 )
-			{
-				foreach(other; statements)
-				{
-					auto combined = new Expression("and", [statement,other]);
-					if( combined in implied )
-						continue;
-					if( statement.args[0].compare(other) )
-					{
-						writefln("Apply MP: %s --> %s", combined, statement.args[1]);
-						implied[combined] = true;
-						action = true;
-						newStatements ~= statement.args[1];
-					}
-				}
-			}
-			if( statement.func == "forall" && statement.args.length > 1 )
-			{
-				foreach(sym,_; symbols)
-				{
-				}
-			/+	uint start = i>=foralls ? 0 : foralls;
-				writefln("Apply forall #%s to [%s..%s]", i, start, statements.length);
-				foreach(j, other; statements[start..$])
-				{
-					writefln("Apply forall: V%s %s to %s", statement.args[0], statement.args[1], other);
-					auto subst = statement.args[1].substitute(other, statement.args[0]);
-					if( subst )
-					{
-						action=true;
-						newStatements ~= subst;
-					}
-				}+/
-			}
-			//writefln("Statements: %s", statements);
-			if( statement.func == "and" && statement !in andElims &&
-				statement.args.length > 1 )
-			{
-				writefln("Apply ^ elim: %s", statement);
-				foreach(arg; statement.args)
-					newStatements ~= arg;
-				andElims[statement] = true;
-				action = true;
-			}
-			if( statement.func == "not" && statement !in notElims &&
-				statement.args.length == 1 && statement.args[0].func == "not" &&
-				statement.args[0].args.length == 1 )
-			{
-				writefln("Apply ~ elim: %s", statement);
-				newStatements ~= statement.args[0].args[0];
-				notElims[statement] = true;
-				action = true;
-			}
-		}
-		foralls = cast(uint)statements.length;
-		statements ~= newStatements;
-		foreach(st; newStatements)
-		{
-			foreach(sym; st.getSymbols())
-				symbols[sym] = true;
-		}
-	} while(action);
-	writefln("Statements: %s", statements);
-
-	writefln("Failed to find proof of %s", goal);
-	return;
-
-success:
-	writefln("Statements: %s", statements);
-	writefln("Found proof of %s", goal);+/
 }
 

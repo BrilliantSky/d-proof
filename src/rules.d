@@ -29,7 +29,7 @@ class GoalRule : BackwardRule
 	bool opCall(ProofContext context) const { return false; };
 	@property override string toString() const pure { return "Goal"; }
 }
-
+/+
 class Subproof : Rule
 {
 protected:
@@ -69,7 +69,7 @@ public:
 		return true;
 	}
 }
-
++/
 class AndElim : ForwardRule
 {
 public:

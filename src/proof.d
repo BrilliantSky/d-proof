@@ -30,22 +30,37 @@ bool checkGoalCondition(in ProofContext pc)
 	return false;+/
 }
 
-
+/// Proves a goal by generating new statements from existing ones.
+///
+/// Currently it just applies all the rules to everything every step
+/// and checks for the goal. There is no heuristic to speed things up.
 class ForwardProver
 {
 	const(ForwardRule[]) mRules;
 
+	/// Constructor. Pass in the set of rules to use in proofs.
 	this(in ForwardRule[] rules) { mRules=rules; }
 
 	enum ProofState { Failed=0, Changed, Success };
 
+	/// Executes one step of a proof.
+	///
+	/// A step can be arbitrarily large, but is guarenteed to halt.
+	/// Currently one step generates all possible new statements
+	/// from only the current existing statements. Also runs one step
+	/// of all subproofs.
 	ProofState step(ProofContext context) const
 	{
+		// Print the statements that were previously generated
 		context.printNewStatements();
+		// Check for the goal
 		if( context.checkGoalCondition() )
 			return ProofState.Success;
+		// Remove the 'new' status from the new statements (they become 'previous')
 		context.applyNewStatements();
 
+		// Step each subproof - this makes them run in parallel (not CPU parallel)
+		// so that if any particular one does not halt, others will still continue
 		foreach(subproof; context.openSubproofs)
 		{
 			step(subproof);
@@ -54,17 +69,22 @@ class ForwardProver
 		// ^ elim:  (and * * ...) ==> a, b
 		// | elim:  (or * * ...) ==> sub(a), sub(b), ...
 
+		// Apply each rule and keep track of how many new expressions were created
 		uint cnt=0;
 		foreach(rule; mRules)
 		{
 			cnt += rule(context);
 		}
 
-		//uint changed = reduce!((n,r) => n+r(mContext))( mRules );
+		// Return whether or not the proof has been updated
 		return cnt > 0 ? ProofState.Changed : ProofState.Failed;
 	}
 }
 
+/// Use the ForwardProver to generate a proof of the goal in pc.
+///
+/// Runs until the prover is successful or calling step() does
+/// not result in new lines (indicating failure).
 bool prove(ProofContext pc)
 {
 	assert(pc.goal.expression, "Must have a goal to prove");
@@ -76,35 +96,8 @@ bool prove(ProofContext pc)
 	do
 	{
 		result = prover.step(pc);
-		writefln("Step result: %s", result);
 	} while( result == ForwardProver.ProofState.Changed );
 
 	return result == ForwardProver.ProofState.Success;
-/+
-	auto andElim = new AndElim();
-	auto notElim = new NotElim();
-	//auto notIntro = new NotIntro();
-	auto orElim = new OrElim();
-	auto contraElim = new ContradictionElim();
-	auto condElim = new ConditionalElim();
-	uint changed;
-
-	pc.printNewStatements();
-	if( pc.checkGoalCondition() )
-		return true;
-	pc.applyNewStatements();
-
-	do
-	{
-		changed = andElim(pc) + notElim(pc) + orElim(pc) + contraElim(pc) + condElim(pc);
-		pc.printNewStatements();
-
-		if( pc.checkGoalCondition() )
-			return true;
-
-		pc.applyNewStatements();
-
-	} while( changed );
-	return false;+/
 }
 
