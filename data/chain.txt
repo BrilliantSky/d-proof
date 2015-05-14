@@ -1,0 +1,7 @@
+
+(implies a b)
+(implies b c)
+(implies c d)
+a
+%d
+

@@ -1,0 +1,8 @@
+{
+	"name": "d-proof",
+	"description": "An automated proof generator for First Order Logic.",
+	"license": "LGPL-2.1",
+	"dependencies": {
+	},
+	"targetType": "executable",
+}

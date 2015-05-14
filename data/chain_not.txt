@@ -1,0 +1,15 @@
+
+# a --> ~b
+(implies a (not b))
+
+# ~b --> ~~c
+(implies (not b) (not (not c)))
+
+# c --> d
+(implies c d)
+
+a
+
+# d because a --> ~b --> ~~c, which is c, and c --> d
+%d
+
